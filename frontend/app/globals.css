@@ -1,49 +1,221 @@
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@import "tailwindcss";
+
+/*
+ * Misaki Design System — v4.0 (Monochrome — Mirai aesthetic)
+ *
+ * No accent color. White text at varying opacities on near-black.
+ * Glass-morphism cards with subtle gray borders. Grain noise overlay.
+ *
+ * Apple keynote / Linear / Vercel territory. The content carries the
+ * weight, not the colors.
+ *
+ * Minimum body text is 16px (text-sm = 1rem). One typeface: Poppins.
+ */
+
+@theme {
+  /* ---------- Typography ---------- */
+  --font-sans: var(--font-poppins), system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  /* ---------- Surfaces ---------- */
+  --color-ink-950: #050505;    /* page background */
+  --color-ink-900: #0a0a0a;    /* card background */
+  --color-ink-800: #111111;    /* elevated surface */
+  --color-ink-700: #1a1a1a;    /* hover surface */
+  --color-ink-600: #2a2a2a;    /* border / divider */
+
+  /* ---------- Text (paper — white, varying opacity) ---------- */
+  --color-paper-50:  rgba(255, 255, 255, 0.96);  /* primary text */
+  --color-paper-100: rgba(255, 255, 255, 0.86);  /* secondary text */
+  --color-paper-200: rgba(212, 212, 216, 0.80);  /* tertiary text */
+  --color-paper-300: rgba(161, 161, 170, 0.85);  /* muted text */
+
+  /* ---------- Subtle borders ---------- */
+  --color-border-strong: rgba(163, 163, 170, 0.38);
+  --color-border-medium: rgba(163, 163, 170, 0.22);
+  --color-border-soft:   rgba(163, 163, 170, 0.14);
+
+  /* ---------- Accent — monochrome white (variable kept for compatibility) ---------- */
+  --color-ember-300: rgba(255, 255, 255, 0.92);
+  --color-ember-400: rgba(255, 255, 255, 0.96);
+  --color-ember-500: #ffffff;
+  --color-ember-600: rgba(255, 255, 255, 0.82);
+  --color-ember-700: rgba(255, 255, 255, 0.62);
+
+  /* ---------- Verified intelligence (sentinel) ---------- */
+  --color-sentinel-400: #22a899;
+  --color-sentinel-500: #1a8e80;
+  --color-sentinel-600: #14736a;
+
+  /* ---------- Severity — kept colorful so threat states still read ---------- */
+  --color-critical: #ef4444;
+  --color-high:     #f97316;
+  --color-medium:   #fbbf24;
+  --color-low:      #22a899;
+
+  /* ---------- Type scale — minimum 16px body ---------- */
+  --text-sm:   1rem;
+  --text-base: 1.125rem;
+  --text-lg:   1.25rem;
+  --text-xl:   1.5rem;
+  --text-2xl:  1.875rem;
+  --text-3xl:  2.25rem;
+  --text-4xl:  3rem;
+  --text-5xl:  3.75rem;
+  --text-6xl:  4.5rem;
+
+  /* ---------- Spacing additions ---------- */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+
+  /* ---------- Easing ---------- */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-expo: cubic-bezier(0.87, 0, 0.13, 1);
+
+  /* ---------- Radius ---------- */
+  --radius-xs: 0.25rem;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* ---------- Base ---------- */
+*, *::before, *::after {
+  box-sizing: border-box;
 }
 
 html {
-  height: 100%;
+  background-color: var(--color-ink-950);
+  scroll-behavior: smooth;
 }
 
-html,
 body {
-  max-width: 100vw;
+  background-color: var(--color-ink-950);
+  color: var(--color-paper-50);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
 }
 
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ---------- Grain noise overlay (Mirai signature) ---------- */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.022;
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+/* ---------- Selection ---------- */
+::selection {
+  background-color: rgba(255, 255, 255, 0.18);
+  color: var(--color-paper-50);
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+/* ---------- Scrollbars ---------- */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.14);
+  border-radius: 99px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.26);
+}
+
+/* ---------- Focus ---------- */
+*:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* ---------- Reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
+
+/* ---------- Utility classes ---------- */
+.text-balance {
+  text-wrap: balance;
+}
+
+.glass-panel {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-medium);
+  backdrop-filter: blur(16px) saturate(130%);
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+}
+
+.nav-glass {
+  background: rgba(5, 5, 5, 0.72);
+  backdrop-filter: blur(20px) saturate(150%);
+  -webkit-backdrop-filter: blur(20px) saturate(150%);
+}
+
+.card-shell {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-medium);
+  border-radius: var(--radius-2xl);
+  padding: 2px;
+}
+
+.card-core {
+  background: rgba(39, 39, 42, 0.28);
+  border-radius: calc(var(--radius-2xl) - 2px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.06);
+}
+
+.num-mono {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.section-alt {
+  background: #070707;
+}
+
+/* ---------- Reveal-on-scroll (Mirai pattern) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 700ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 700ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+.reveal-d1 { transition-delay: 80ms; }
+.reveal-d2 { transition-delay: 160ms; }
+.reveal-d3 { transition-delay: 240ms; }
+.reveal-d4 { transition-delay: 320ms; }
+.reveal-d5 { transition-delay: 400ms; }
+.reveal-d6 { transition-delay: 480ms; }
