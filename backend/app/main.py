@@ -1,22 +1,15 @@
 """FastAPI application entrypoint."""
 from __future__ import annotations
-
 import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
-
 from app.core.config import settings as _settings_boot
-
-# Langfuse SDK reads its keys from os.environ at import time of any
-# `@observe` decorator. Pydantic Settings does not write to os.environ,
-# so we promote the values explicitly before anything imports langfuse.
 os.environ.setdefault("LANGFUSE_PUBLIC_KEY", _settings_boot.LANGFUSE_PUBLIC_KEY or "")
 os.environ.setdefault(
     "LANGFUSE_SECRET_KEY",
     _settings_boot.LANGFUSE_SECRET_KEY.get_secret_value() if _settings_boot.LANGFUSE_SECRET_KEY else "",
 )
 os.environ.setdefault("LANGFUSE_HOST", str(_settings_boot.LANGFUSE_HOST))
-
 import sentry_sdk
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -27,16 +20,36 @@ from sentry_sdk.integrations.starlette import StarletteIntegration
 from slowapi import Limiter, _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from slowapi.util import get_remote_address
-
-from app.api.v1 import assessments, bills, healthz, profile
+from app.api.v1 import assessments, bills, events, healthz, profile
 from app.core.config import settings
 from app.core.logging import configure_logging, get_logger
+from app.mcp.bus import bus
 from app.middleware.demo_auth import DemoAuthMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
+from app.api.v1 import agentic, scanner, share
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 configure_logging()
 log = get_logger(__name__)
+
+
+
+
+
 
 
 #  Sentry 
@@ -65,8 +78,12 @@ limiter = Limiter(
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info("misaki_starting", env=settings.ENVIRONMENT)
-    yield
-    log.info("misaki_shutting_down")
+    await bus.start()
+    try:
+        yield
+    finally:
+        await bus.stop()
+        log.info("misaki_shutting_down")
 
 
 #  App 
@@ -106,7 +123,10 @@ app.include_router(healthz.router, prefix="/api/v1", tags=["health"])
 app.include_router(profile.router, prefix="/api/v1")
 app.include_router(bills.router, prefix="/api/v1")
 app.include_router(assessments.router, prefix="/api/v1")
-
+app.include_router(events.router, prefix="/api/v1")
+app.include_router(agentic.router, prefix="/api/v1")
+app.include_router(scanner.router, prefix="/api/v1")
+app.include_router(share.router,   prefix="/api/v1")
 
 @app.get("/")
 async def root() -> dict[str, str]:

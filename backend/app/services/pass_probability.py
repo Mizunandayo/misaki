@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 import uuid
-from datetime import datetime, timedelta, timezone
-from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.ai.schemas import PassProbabilityResult, ProbabilitySignal
 from app.core.logging import get_logger

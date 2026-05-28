@@ -1,18 +1,20 @@
-import { Hero } from '@/components/landing/Hero'
-import { JurisdictionPulseMap } from '@/components/landing/JurisdictionPulseMap'
-import { LiveBillsCounter } from '@/components/landing/LiveBillsCounter'
-import { ThreatTickerPreview } from '@/components/landing/ThreatTickerPreview'
+import { Hero } from "@/components/landing/Hero";
+import { JurisdictionPulseMap } from "@/components/landing/JurisdictionPulseMap";
+import { LiveBillsCounter } from "@/components/landing/LiveBillsCounter";
+import { ThreatTickerPreview } from "@/components/landing/ThreatTickerPreview";
+import { ScannerSection } from "@/components/scanner/ScannerSection";
 
 export default function LandingPage() {
   return (
     <main>
       <Hero />
       <LiveBillsCounter />
+      <ScannerSection />
       <JurisdictionPulseMap />
       <ThreatTickerPreview />
       <Footer />
     </main>
-  )
+  );
 }
 
 function Footer() {

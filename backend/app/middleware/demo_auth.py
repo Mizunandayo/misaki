@@ -67,8 +67,19 @@ class DemoAuthMiddleware(BaseHTTPMiddleware):
             return True
         if path.startswith("/api/v1/public/"):
             return True
+        # Public Company Scanner — entire subtree open (POST /scanner,
+        # GET /scanner/{id}, POST /scanner/{id}/share). Rate-limited
+        # via slowapi at the route layer.
+        if path.startswith("/api/v1/scanner/") or path == "/api/v1/scanner":
+            return True
         # EventSource cannot send custom headers, so SSE streams must be public.
-        # The endpoint is gated by UUID path validation + slowapi rate limit.
+        # Endpoints are gated by UUID path validation + slowapi rate limit.
         if path.startswith("/api/v1/assessments/") and path.endswith("/stream"):
+            return True
+        if path.startswith("/api/v1/events/stream"):
+            return True
+        # Shareable signed scanner reports (Phase 3) — HMAC token in the path
+        # is the auth. Verified server-side, no demo key required.
+        if path.startswith("/api/v1/share/"):
             return True
         return False

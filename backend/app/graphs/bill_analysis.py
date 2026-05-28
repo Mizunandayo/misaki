@@ -13,14 +13,13 @@ on Day 3 and consumes the same state plus the assessment row.
 from __future__ import annotations
 import json
 import uuid
-from datetime import datetime, timezone
 from typing import Any, TypedDict, cast
 from langfuse import observe
 from langgraph.graph import END, START, StateGraph
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from app.ai.capabilities import Capability
 from app.ai.embeddings import compute_embedding
-from app.ai.gemini import get_flash, get_pro, structured_call
+from app.ai.gateway import reason
 from app.ai.prompts import (
     APPLICABILITY_SYSTEM,
     APPLICABILITY_USER,
@@ -144,8 +143,9 @@ async def triage_node(state: BillAnalysisState) -> dict[str, Any]:
     bill = state["bill"]
     profile = state["profile"]
 
-    result = await structured_call(
-        get_flash(),
+    result = await reason(
+        task="triage",
+        capability=Capability.FAST_CHEAP,
         schema=TriageResult,
         system_prompt=TRIAGE_SYSTEM,
         user_prompt=TRIAGE_USER.format(
@@ -175,8 +175,9 @@ async def applicability_node(state: BillAnalysisState) -> dict[str, Any]:
         else "No semantically similar precedents in database yet."
     )
 
-    verdict = await structured_call(
-        get_pro(),
+    verdict = await reason(
+        task="applicability",
+        capability=Capability.DEEP_REASONING,
         schema=ApplicabilityVerdict,
         system_prompt=APPLICABILITY_SYSTEM,
         user_prompt=APPLICABILITY_USER.format(
