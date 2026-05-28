@@ -138,12 +138,49 @@ def _detect_jurisdiction(text: str) -> str:
     return "UPLOAD"
 
 
+def _extract_title(full_text: str) -> str:
+    """Extract a readable bill title from OCR'd legislative text.
+
+    Priority:
+    1. "AN ACT ..." block — the real long title in US/PH legislative format.
+       Joins the AN ACT line with contiguous ALL-CAPS continuation lines.
+    2. First non-empty line as a fallback.
+
+    Always converts to Title Case so ALL-CAPS OCR output reads cleanly
+    in the bill detail header regardless of source jurisdiction.
+    """
+    lines = [ln.strip() for ln in full_text.splitlines() if ln.strip()]
+    raw = ""
+    for i, line in enumerate(lines):
+        if line.upper().startswith("AN ACT"):
+            parts = [line]
+            for nxt in lines[i + 1:]:
+                if nxt == nxt.upper() and len(nxt) > 3:
+                    parts.append(nxt)
+                else:
+                    break
+            raw = " ".join(parts)
+            break
+    if not raw:
+        raw = lines[0] if lines else "Vision-Ingested Bill"
+
+    # Convert ALL-CAPS to Title Case. str.title() handles the common case;
+    # small words (conjunctions, prepositions) stay lower after the first word.
+    _SMALL = {"a","an","and","as","at","but","by","for","in","nor","of",
+               "on","or","so","the","to","up","yet","with","from"}
+    words = raw.lower().split()
+    titled = [
+        w.capitalize() if i == 0 or w not in _SMALL else w
+        for i, w in enumerate(words)
+    ]
+    return " ".join(titled)[:512]
+
+
 async def _persist_bill(full_text: str) -> uuid.UUID:
     """Insert a minimal Bill row for the vision-extracted text.
-    The title heuristic uses the first non-empty line (≤200 chars).
-    urgency_score=60 ensures it appears mid-feed until analyzed."""
-    lines = [ln.strip() for ln in full_text.splitlines() if ln.strip()]
-    title = (lines[0][:200] if lines else "Vision-Ingested Bill")
+    title column is TEXT (no DB length limit) — cap set at 512 to match
+    the existing scrapers. urgency_score=60 ensures it appears mid-feed."""
+    title = _extract_title(full_text)
     content_hash = hashlib.sha256(full_text.encode()).hexdigest()
     jurisdiction = _detect_jurisdiction(full_text)
 

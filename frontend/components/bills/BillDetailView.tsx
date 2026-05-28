@@ -89,7 +89,16 @@ export function BillDetailView({ bill, autoAgent }: { bill: BillDetail; autoAgen
           </div>
           {/* SECURITY: scraped title rendered as text — React auto-escapes.
               Never dangerouslySetInnerHTML anywhere on this page. */}
-          <h1 className="text-balance mt-3 text-4xl font-bold leading-tight text-white lg:text-5xl">
+          <h1
+            className={[
+              "text-balance mt-3 font-bold leading-tight text-white",
+              bill.title.length > 120
+                ? "text-2xl lg:text-3xl"
+                : bill.title.length > 60
+                  ? "text-3xl lg:text-4xl"
+                  : "text-4xl lg:text-5xl",
+            ].join(" ")}
+          >
             {bill.title}
           </h1>
           <div className="mt-6 flex flex-wrap items-center gap-3">

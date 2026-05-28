@@ -17,7 +17,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 from slowapi import Limiter
 from slowapi.util import get_remote_address
-from app.db.session import get_db
+from app.db.session import get_db, session_scope
 from app.graphs.bill_analysis import run_analysis
 
 
