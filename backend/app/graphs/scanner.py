@@ -110,7 +110,11 @@ async def _fetch_sec(run_id: uuid.UUID, name: str) -> str:
     index_str = index if isinstance(index, str) else str(index)
     m = re.search(r"https?://www\.sec\.gov/Archives/edgar/[^\s)]+", index_str)
     if not m:
-        return _truncate(index_str, MAX_PAGE_CHARS)
+        # No 10-K filing matched — usually the target is private (Stripe,
+        # Anthropic, etc.). Returning the raw search index page would feed
+        # the synthesis prompt noise; empty string tells the LLM "no SEC
+        # filing" cleanly so it anchors the exposure score on press + lobbying.
+        return ""
 
     filing_url = m.group(0)
     try:

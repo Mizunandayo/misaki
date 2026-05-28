@@ -16,6 +16,7 @@ post-hackathon from Bright Data invoices.
 
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import json
 import time
@@ -36,6 +37,10 @@ log = get_logger(__name__)
 
 DEFAULT_TTL = 86_400
 APPROX_CREDIT_CENTS = 1
+# Per-tool wall-clock ceiling. Sized for the slowest healthy Bright Data path
+# (large 10-K filing scrape) while still bounding the demo to a predictable
+# upper bound. Override via the `timeout` arg for unusually heavy calls.
+DEFAULT_TOOL_TIMEOUT_SECONDS = 25.0
 
 
 def _tool_cache_key(tool_name: str, args: dict[str, Any]) -> str:
@@ -67,9 +72,11 @@ async def call_tool(
     tool_name: str,
     args: dict[str, Any],
     summarize: str | None = None,
+    timeout: float | None = None,
 ) -> Any:
     key = _tool_cache_key(tool_name, args)
     r: aioredis.Redis = _client()
+    wall_clock_ceiling = timeout if timeout is not None else DEFAULT_TOOL_TIMEOUT_SECONDS
 
     cached_raw = await r.get(key)
     if cached_raw is not None:
@@ -107,7 +114,25 @@ async def call_tool(
 
     t0 = time.perf_counter()
     try:
-        result = await tool.ainvoke(args)
+        result = await asyncio.wait_for(tool.ainvoke(args), timeout=wall_clock_ceiling)
+    except asyncio.TimeoutError:
+        latency_ms = int((time.perf_counter() - t0) * 1000)
+        await publish_event(
+            run_id,
+            EventType.ERROR,
+            {
+                "tool": tool_name,
+                "error": "timeout",
+                "ceiling_seconds": wall_clock_ceiling,
+                "latency_ms": latency_ms,
+            },
+        )
+        # Bump the call meter (we did spend the upstream credit) but skip
+        # caching — a timeout is not a result we want to memoize.
+        await _bump_run_meter(run_id, cached=False)
+        raise TimeoutError(
+            f"MCP tool '{tool_name}' exceeded {wall_clock_ceiling:.0f}s ceiling"
+        )
     except Exception as exc:
         await publish_event(
             run_id,

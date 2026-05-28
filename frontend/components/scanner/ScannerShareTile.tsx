@@ -21,10 +21,11 @@ export function ScannerShareTile({ reportId }: { reportId: string }) {
     setPending(true);
     setError(null);
     try {
-      const { path } = await mintShareLink(reportId);
+      const { token } = await mintShareLink(reportId);
+      // Frontend route (NOT the raw API JSON endpoint) — colleagues land on a
+      // rendered card via /share/scanner/<token>. The HMAC token IS auth.
       const origin = typeof window !== "undefined" ? window.location.origin : "";
-      const baseApi = process.env.NEXT_PUBLIC_API_BASE_URL ?? origin;
-      const url = `${baseApi}${path}`;
+      const url = `${origin}/share/scanner/${token}`;
       setLink(url);
       await navigator.clipboard.writeText(url).catch(() => undefined);
       setCopied(true);
@@ -39,7 +40,7 @@ export function ScannerShareTile({ reportId }: { reportId: string }) {
   return (
     <div className="
       font-[Poppins]
-      rounded-lg border border-white/12 bg-white/[0.02]
+      rounded-lg border border-white/12 bg-white/2
       p-5 flex flex-wrap items-center gap-4 justify-between
     ">
       <div className="flex flex-col">
@@ -60,7 +61,7 @@ export function ScannerShareTile({ reportId }: { reportId: string }) {
         className="
           inline-flex items-center gap-2 cursor-pointer
           h-10 px-5 rounded-md
-          border border-white/15 bg-white text-[#050505]
+          border border-white/15 bg-white text-ink-950
           font-semibold tracking-tight
           hover:bg-white/95 hover:border-white/30
           disabled:opacity-50 disabled:cursor-not-allowed
