@@ -4,7 +4,7 @@ export default function ShareNotFound() {
   return (
     <main
       className="
-        min-h-screen bg-[#050505] text-white font-[Poppins]
+        min-h-screen bg-ink-950 text-white font-[Poppins]
         flex flex-col items-center justify-center px-6
       "
     >
@@ -25,7 +25,7 @@ export default function ShareNotFound() {
           className="
             inline-flex items-center gap-2 cursor-pointer
             h-11 px-6 rounded-md mt-2
-            border border-white/15 bg-white text-[#050505]
+            border border-white/15 bg-white text-ink-950
             font-semibold tracking-tight text-base
             hover:bg-white/95 hover:border-white/30
             transition-colors duration-200

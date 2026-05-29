@@ -15,7 +15,14 @@ interface PageProps {
   params: Promise<{ token: string }>;
 }
 
-async function loadReport(token: string): Promise<ScannerReportRow | null> {
+// Share endpoint returns the report row PLUS the token's own expiry, which
+// is distinct from `report.expires_at` (the 7-day scanner_reports cache TTL).
+// The 24h share link is what the page header should display.
+interface SharedScannerResponse extends ScannerReportRow {
+  token_expires_at: string;
+}
+
+async function loadReport(token: string): Promise<SharedScannerResponse | null> {
   let res: Response;
   try {
     res = await fetch(`${API_BASE}/api/v1/share/scanner/${encodeURIComponent(token)}`);
@@ -24,7 +31,7 @@ async function loadReport(token: string): Promise<ScannerReportRow | null> {
   }
   if (!res.ok) return null;
   try {
-    return (await res.json()) as ScannerReportRow;
+    return (await res.json()) as SharedScannerResponse;
   } catch {
     return null;
   }
@@ -50,7 +57,7 @@ export default async function SharedScannerReportPage({ params }: PageProps) {
   return (
     <main
       className="
-        min-h-screen bg-[#050505] text-white font-[Poppins]
+        min-h-screen bg-ink-950 text-white font-[Poppins]
         flex flex-col
       "
     >
@@ -80,7 +87,7 @@ export default async function SharedScannerReportPage({ params }: PageProps) {
           </span>
         </Link>
         <span className="text-sm text-white/80">
-          Link expires {fmtExpiry(report.expires_at)}
+          Link expires {fmtExpiry(report.token_expires_at)}
         </span>
       </header>
 
@@ -113,7 +120,7 @@ export default async function SharedScannerReportPage({ params }: PageProps) {
             className="
               inline-flex items-center gap-2 cursor-pointer
               h-10 px-5 rounded-md
-              border border-white/15 bg-white text-[#050505]
+              border border-white/15 bg-white text-ink-950
               font-semibold tracking-tight text-sm
               hover:bg-white/95 hover:border-white/30
               transition-colors duration-200

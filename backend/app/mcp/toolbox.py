@@ -49,6 +49,32 @@ def _tool_cache_key(tool_name: str, args: dict[str, Any]) -> str:
     return f"mcp:{tool_name}:{h}"
 
 
+def _unwrap_mcp_content(result: Any) -> Any:
+    """Bright Data MCP returns scraped/SERP content wrapped in
+    `[{'type': 'text', 'text': '...', 'id': '...'}, ...]` envelopes.
+
+    Downstream callers expect plain strings (for scrape_as_markdown) or
+    structured dicts (for search_engine). Coerce here so no caller has to
+    know about the envelope shape, and so the synthesis prompt receives
+    actual markdown — not Python repr noise.
+
+    Rules:
+      - list of {'type': 'text', 'text': str} → concat the 'text' fields
+      - list of dicts (no text envelope) → leave as-is (e.g. SERP results)
+      - dict / str → leave as-is
+    """
+    if isinstance(result, list) and result:
+        looks_like_text_envelope = all(
+            isinstance(item, dict) and item.get("type") == "text"
+            for item in result
+        )
+        if looks_like_text_envelope:
+            return "".join(
+                str(item.get("text") or "") for item in result
+            )
+    return result
+
+
 async def _bump_run_meter(run_id: uuid.UUID, *, cached: bool) -> None:
     delta = 0 if cached else APPROX_CREDIT_CENTS
     async with session_scope() as session:
@@ -142,6 +168,10 @@ async def call_tool(
         raise
 
     latency_ms = int((time.perf_counter() - t0) * 1000)
+    # Unwrap Bright Data's text-content envelope BEFORE caching so that the
+    # cache and downstream callers see the actual scraped markdown / SERP
+    # payload, not a list of {'type':'text','text':'...'} wrappers.
+    result = _unwrap_mcp_content(result)
     # MCP results vary by tool — coerce to str|list|dict so json.dumps works.
     serializable = result if isinstance(result, (str, list, dict)) else str(result)
     payload = json.dumps(serializable, default=str)

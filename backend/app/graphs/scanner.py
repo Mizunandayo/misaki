@@ -79,6 +79,27 @@ def _truncate(s: str, n: int) -> str:
     return s if len(s) <= n else (s[:n] + "\n…[truncated]")
 
 
+def _parse_serp(raw: Any) -> list[dict[str, Any]]:
+    """Bright Data search_engine returns JSON-as-string with shape
+    `{"organic": [...]}`. Older SERP wrappers used "organic_results" or a bare
+    list. Normalize to a list of organic-result dicts so callers don't need
+    to know the upstream variation."""
+    if isinstance(raw, str):
+        try:
+            raw = json.loads(raw)
+        except Exception:
+            return []
+    if isinstance(raw, dict):
+        for key in ("organic", "organic_results", "results"):
+            v = raw.get(key)
+            if isinstance(v, list):
+                return [item for item in v if isinstance(item, dict)]
+        return []
+    if isinstance(raw, list):
+        return [item for item in raw if isinstance(item, dict)]
+    return []
+
+
 async def _fetch_sec(run_id: uuid.UUID, name: str) -> str:
     """Use the Bright Data assistant tool to pull the latest 10-K Risk Factors.
 
@@ -163,15 +184,7 @@ async def _fetch_press(run_id: uuid.UUID, name: str) -> list[dict[str, Any]]:
         return []
 
     items: list[dict[str, Any]] = []
-    raw_results = []
-    if isinstance(serp, dict):
-        raw_results = serp.get("organic_results") or serp.get("results") or []
-    elif isinstance(serp, list):
-        raw_results = serp
-
-    for r in list(raw_results)[:MAX_PRESS_HITS]:
-        if not isinstance(r, dict):
-            continue
+    for r in _parse_serp(serp)[:MAX_PRESS_HITS]:
         url = r.get("link") or r.get("url")
         title = r.get("title") or ""
         snippet = r.get("snippet") or r.get("description") or ""
@@ -181,39 +194,81 @@ async def _fetch_press(run_id: uuid.UUID, name: str) -> list[dict[str, Any]]:
 
 
 async def _fetch_lobbying(run_id: uuid.UUID, name: str) -> list[dict[str, Any]]:
+    """OpenSecrets cross-reference — TWO-STEP via SERP.
+
+    The naive `clients/summary?id={name}` URL pattern doesn't work — OpenSecrets
+    indexes lobbying clients by internal IDs (e.g. D000067052) not company name,
+    so the URL returns an empty / error page. Instead:
+
+      1. SERP `site:opensecrets.org "{name}" lobbying` to locate the real page
+         (which can be either /orgs/{slug}/summary or /federal-lobbying/...).
+      2. Scrape the first match for the actual disclosure table.
+
+    Costs one extra MCP call vs the old pattern but actually returns data.
+    """
     await publish_event(
         run_id, EventType.THINK,
         {"kind": "scanner_step", "node": "lobbying_lookup",
          "text": f"Cross-referencing OpenSecrets for {name}"},
     )
-    url = (
-        "https://www.opensecrets.org/federal-lobbying/clients/summary"
-        f"?id={name.replace(' ', '%20')}"
-    )
+
+    # Step 1 — locate the right OpenSecrets URL via SERP.
+    try:
+        serp = await call_tool(
+            run_id=run_id,
+            tool_name="search_engine",
+            args={
+                "query": f'site:opensecrets.org "{name}" lobbying',
+                "engine": "google",
+            },
+            summarize=f"Locating OpenSecrets profile for {name}",
+        )
+    except Exception as exc:
+        log.warning("scanner_lobbying_serp_failed", err=str(exc))
+        return []
+
+    target_url: str | None = None
+    for r in _parse_serp(serp)[:8]:
+        u = r.get("link") or r.get("url")
+        if not isinstance(u, str) or "opensecrets.org" not in u:
+            continue
+        # Prefer org summary / federal-lobbying detail pages; skip search results.
+        if "/orgs/" in u or "/federal-lobbying/" in u or "/lobby/" in u:
+            target_url = u
+            break
+
+    if target_url is None:
+        # No SERP hit for this company on OpenSecrets — honest "no data".
+        return []
+
+    # Step 2 — scrape the actual disclosure page.
     try:
         page = await call_tool(
             run_id=run_id,
             tool_name="scrape_as_markdown",
-            args={"url": url},
-            summarize=f"OpenSecrets lookup for {name}",
+            args={"url": target_url},
+            summarize=f"Scraping {target_url[-60:]}",
         )
     except Exception as exc:
-        log.warning("scanner_lobbying_failed", err=str(exc))
+        log.warning("scanner_lobbying_scrape_failed", err=str(exc), url=target_url)
         return []
+
     page_str = page if isinstance(page, str) else str(page)
-    # Heuristic row extraction — the synthesis model handles soft fields.
     rows: list[dict[str, Any]] = []
     for m in re.finditer(r"\$([\d,]{4,})\s+[\-—–]?\s*(\d{4})\s+([A-Z][^\n]{0,80})", page_str):
         rows.append({
             "amount_usd": int(m.group(1).replace(",", "")),
             "year": int(m.group(2)),
             "issue_or_client": m.group(3).strip()[:80],
+            "source_url": target_url,
         })
         if len(rows) >= 20:
             break
+
     if not rows:
-        # Pass the raw page if parsing failed; synthesis model can still reason
-        rows = [{"raw_excerpt": _truncate(page_str, 2400)}]
+        # Regex didn't catch — hand the truncated page to the synthesis model so
+        # it can still reason about totals/years from the raw text.
+        rows = [{"raw_excerpt": _truncate(page_str, 2400), "source_url": target_url}]
     return rows
 
 

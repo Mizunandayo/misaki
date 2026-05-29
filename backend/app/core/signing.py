@@ -51,8 +51,12 @@ def mint(kind: Kind, resource_id: str, *, ttl_seconds: int = DEFAULT_TTL_SECONDS
 
 
 
-def verify(token: str, *, expected_kind: Kind) -> str | None:
-    """Returns the resource_id if valid, None otherwise. Constant-time HMAC check."""
+def verify(token: str, *, expected_kind: Kind) -> tuple[str, int] | None:
+    """Returns (resource_id, exp_unix) if valid, None otherwise. Constant-time HMAC check.
+
+    Returning the exp lets callers surface the actual token-expiry to the
+    client without exposing the signing key or asking the client to decode
+    the payload — separation of concerns stays intact."""
     try:
         payload_b64, sig_b64 = token.split(".", 1)
     except ValueError:
@@ -76,4 +80,4 @@ def verify(token: str, *, expected_kind: Kind) -> str | None:
         return None
     if exp < int(time.time()):
         return None
-    return resource_id
+    return resource_id, exp
