@@ -1,20 +1,28 @@
 import { notFound } from "next/navigation";
 import { api } from "@/lib/api";
-import { BillStreamView } from "@/components/bills/BillStreamView";
-import { AgenticPanel } from "@/components/agent/AgenticPanel";
+import { BillDetailView } from "@/components/bills/BillDetailView";
 
-export default async function BillPage({ params }: { params: Promise<{ id: string }> }) {
+// Bill detail reflects live assessment/agent state — never statically cache.
+export const dynamic = "force-dynamic";
+
+export default async function BillPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ agent?: string }>;
+}) {
   const { id } = await params;
+  const { agent } = await searchParams;
+
   let bill;
   try {
     bill = await api.bills.get(id);
   } catch {
     notFound();
   }
-  return (
-    <div className="flex flex-col gap-10">
-      <BillStreamView bill={bill} />
-      <AgenticPanel billId={id} />
-    </div>
-  );
+
+const autoAgent = agent === "1";
+
+  return <BillDetailView bill={bill} autoAgent={autoAgent} />;
 }

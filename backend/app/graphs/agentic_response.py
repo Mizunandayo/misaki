@@ -612,7 +612,7 @@ async def persist_action_package(state: AgenticState) -> uuid.UUID | None:
                     ),
                     "brief": brief_text,
                     "strategy": pkg.competitive_strategy.recommendation_summary,
-                    "payload": json.dumps(payload_json),
+                    "payload": json.dumps(payload_json, default=str),
                 },
             )
         ).scalar_one()

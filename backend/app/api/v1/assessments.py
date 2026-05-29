@@ -86,6 +86,42 @@ async def stream_assessment(
                 yield _sse({"type": "skipped", "reason": triage.reason if triage else "no triage"})
                 return
 
+            # --- model attribution ------------------------------------------
+            # Query the most recent successful 'applicability' call from
+            # model_calls. run_analysis() is synchronous here so the row is
+            # already committed by the time we query. The 30-second window
+            # is wide enough to survive slow analyses; narrow enough to never
+            # return a stale row from a prior request.
+            # SECURITY: only task='applicability' is queried; no user-supplied
+            # input enters the SQL (bill_id is validated as uuid by FastAPI).
+            async with session_scope() as db_session:
+                attr_row = (
+                    await db_session.execute(
+                        text(
+                            """
+                            SELECT provider, model, capability, latency_ms
+                              FROM model_calls
+                             WHERE task = 'applicability'
+                               AND status = 'ok'
+                               AND occurred_at > NOW() - INTERVAL '30 seconds'
+                             ORDER BY occurred_at DESC
+                             LIMIT 1
+                            """
+                        )
+                    )
+                ).mappings().first()
+
+            if attr_row:
+                yield _sse({
+                    "type": "model_attribution",
+                    "task": "applicability",
+                    "provider": attr_row["provider"],
+                    "model": attr_row["model"],
+                    "capability": attr_row["capability"],
+                    "latency_ms": attr_row["latency_ms"],
+                })
+            # ----------------------------------------------------------------
+
             probability = final.get("probability")
 
             for step in verdict.reasoning_chain:
@@ -115,6 +151,8 @@ async def stream_assessment(
             return
         except Exception as exc:
             yield _sse({"type": "error", "message": str(exc)[:300]})
+
+    
 
     return StreamingResponse(
         event_stream(),

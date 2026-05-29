@@ -8,6 +8,15 @@ export type StreamEvent =
   | { type: 'triage'; passed: boolean; confidence: number; reason: string }
   | { type: 'reasoning_step'; step: number; observation: string; inference: string }
   | {
+      type: 'model_attribution'
+      task: string
+      provider: string
+      model: string
+      capability: string
+      latency_ms: number
+    }
+  | { type: 'reasoning_step'; step: number; observation: string; inference: string }
+  | {
       type: 'verdict'
       verdict: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NOT_APPLICABLE'
       confidence: number

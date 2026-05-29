@@ -62,6 +62,13 @@ export const api = {
         { method: 'POST' },
       ),
   },
+    intelligence: {
+    summary: (windowHours = 168) =>
+      request<ModelSummary>(
+        `/api/v1/intelligence/summary?window_hours=${windowHours}`,
+      ),
+  },
+
 }
 
 export type Verdict = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW' | 'NOT_APPLICABLE'
@@ -74,7 +81,12 @@ export interface Bill {
   status: string
   pass_probability: number
   urgency_score: number
+  verdict?: Verdict
+  compliance_cost_estimate?: number | null
+  effective_date?: string | null
+  pass_probability_velocity_7d?: number | null
 }
+
 
 export interface BillDetail extends Bill {
   full_text: string | null
@@ -137,4 +149,60 @@ export interface ProfileGap {
 
 export interface AutoDossier extends Omit<Profile, 'id'> {
   sources: Record<string, string>
+}
+
+
+
+export interface ModelSummaryTotals {
+  calls: number
+  est_cost_usd: number
+  avg_latency_ms: number
+  providers: number
+  models: number
+}
+
+export interface CapabilityRow {
+  capability: string
+  calls: number
+  avg_latency_ms: number
+  est_cost_usd: number
+}
+
+export interface ModelRow {
+  provider: string
+  model: string
+  calls: number
+  avg_latency_ms: number
+  est_cost_usd: number
+  ok: number
+  fallbacks: number
+  errors: number
+}
+
+export interface TaskRow {
+  task: string
+  provider: string
+  model: string
+  calls: number
+  avg_latency_ms: number
+}
+
+export interface RecentCall {
+  task: string
+  capability: string
+  provider: string
+  model: string
+  status: 'ok' | 'retry' | 'fallback' | 'error'
+  latency_ms: number
+  cache_hit: boolean
+  occurred_at: string
+}
+
+export interface ModelSummary {
+  window_hours: number
+  totals: ModelSummaryTotals
+  by_capability: CapabilityRow[]
+  by_model: ModelRow[]
+  by_task: TaskRow[]
+  recent: RecentCall[]
 }

@@ -1,4 +1,4 @@
-const BASE = process.env.NEXT_PUBLIC_API_BASE_URl!;
+const BASE = process.env.NEXT_PUBLIC_API_BASE_URL!;
 const DEMO_KEY = process.env.NEXT_PUBLIC_DEMO_API_KEY!;
 
 

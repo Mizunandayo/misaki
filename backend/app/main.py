@@ -28,6 +28,8 @@ from app.middleware.demo_auth import DemoAuthMiddleware
 from app.middleware.request_id import RequestIDMiddleware
 from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.api.v1 import agentic, scanner, share
+from app.api.v1 import agentic, scanner, share, intelligence
+from app.api.v1 import agentic, scanner, share, intelligence, ingest_vision
 
 
 
@@ -127,6 +129,13 @@ app.include_router(events.router, prefix="/api/v1")
 app.include_router(agentic.router, prefix="/api/v1")
 app.include_router(scanner.router, prefix="/api/v1")
 app.include_router(share.router,   prefix="/api/v1")
+app.include_router(intelligence.router, prefix="/api/v1")
+app.include_router(ingest_vision.router, prefix="/api/v1")
+
+
+
+
+
 
 @app.get("/")
 async def root() -> dict[str, str]:

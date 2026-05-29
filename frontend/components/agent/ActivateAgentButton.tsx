@@ -1,29 +1,25 @@
 "use client";
 
-
-
-
 import { motion } from "framer-motion";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { startAgenticRun } from "@/lib/api/agentic";
+
+
+
+
 
 interface Props {
   billId: string;
   onRunStarted: (runId: string) => void;
   disabled?: boolean;
+  /** When true (from the dashboard ?agent=1 CTA), fire the run once on mount. */
+  autoStart?: boolean;
 }
 
-
-
-
-
-
-
-
-
-export function ActivateAgentButton({ billId, onRunStarted, disabled }: Props) {
+export function ActivateAgentButton({ billId, onRunStarted, disabled, autoStart }: Props) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const autoFired = useRef(false);
 
   async function handleClick() {
     if (pending || disabled) return;
@@ -40,6 +36,13 @@ export function ActivateAgentButton({ billId, onRunStarted, disabled }: Props) {
   }
 
 
+  useEffect(() => {
+    if (autoStart && !autoFired.current) {
+      autoFired.current = true;
+      void handleClick();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoStart]);
 
 
 
@@ -48,6 +51,10 @@ export function ActivateAgentButton({ billId, onRunStarted, disabled }: Props) {
 
 
 
+
+
+
+  
   return (
     <div className="flex flex-col gap-2 font-[Poppins]">
       <motion.button
@@ -75,26 +82,14 @@ export function ActivateAgentButton({ billId, onRunStarted, disabled }: Props) {
         </span>
         <ChevronIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
       </motion.button>
-      {error && (
-        <span className="text-sm text-white/80">
-          {error}
-        </span>
-      )}
+      {error && <span className="text-sm text-white/80">{error}</span>}
     </div>
   );
 }
 
 function BoltIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
     </svg>
   );
@@ -102,15 +97,7 @@ function BoltIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function ChevronIcon(props: React.SVGProps<SVGSVGElement>) {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
       <path d="m9 18 6-6-6-6" />
     </svg>
   );

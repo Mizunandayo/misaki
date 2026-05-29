@@ -32,6 +32,10 @@ PUBLIC_PATHS: frozenset[str] = frozenset({
     "/docs",
     "/openapi.json",
     "/",
+    # Intelligence telemetry — read-only aggregated model_calls data, no PII,
+    # no bill text. Making it public lets the client-side ModelRouterPanel
+    # fetch without the demo key auth issue. Still rate-limited by slowapi.
+    "/api/v1/intelligence/summary",
 })
 
 
@@ -41,6 +45,13 @@ class DemoAuthMiddleware(BaseHTTPMiddleware):
         request: Request,
         call_next: Callable[[Request], Awaitable[Response]],
     ) -> Response:
+        # CORS preflight — the browser sends OPTIONS before every cross-origin
+        # POST with custom headers. DemoAuth must not reject it: CORSMiddleware
+        # (which runs after us in the stack) needs to respond with the allowed
+        # headers. The subsequent real request is still auth-checked.
+        if request.method == "OPTIONS":
+            return await call_next(request)
+
         if self._is_public(request.url.path):
             return await call_next(request)
 

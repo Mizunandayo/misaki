@@ -1,17 +1,4 @@
-"""AI/ML API provider — OpenAI Chat Completions compatible.
-
-Strategy: strict response_format=json_schema mode with a schema sanitized
-for OpenAI's strict-mode requirements. The schema travels in
-response_format (not in the system prompt) so the model sees a clean,
-focused instruction. OpenAI enforces the shape; the gateway's repair
-loop is fallback for the rare drift.
-
-OpenAI strict mode rules we must satisfy:
-  - additionalProperties: false on every object
-  - every property must appear in required[]
-  - no value-constraint keywords: minimum, maximum, minLength, maxLength,
-    pattern, format, minItems, maxItems, multipleOf, exclusive*, default
-"""
+"""AI/ML API provider — OpenAI Chat Completions compatible."""
 
 from __future__ import annotations
 
@@ -125,3 +112,83 @@ class AIMLProvider(Provider):
             input_tokens=int(usage.get("prompt_tokens", 0)),
             output_tokens=int(usage.get("completion_tokens", 0)),
         )
+
+
+
+    async def chat_vision_stream(
+        self,
+        *,
+        model: str,
+        image_b64: str,
+        mime: str,
+        prompt: str,
+        timeout_seconds: int = 90,
+    ):
+        """Stream raw text tokens from a vision model.
+
+        Yields str chunks as they arrive. Uses the OpenAI streaming protocol
+        (text/event-stream with `data: {...}` lines ending in `[DONE]`).
+        Does NOT use response_format=json_schema — OCR output is raw text,
+        not structured JSON. Validation happens in the caller via sanitization.
+        """
+        url = f"{str(settings.AIML_BASE_URL).rstrip('/')}/chat/completions"
+        body = {
+            "model": model,
+            "stream": True,
+            "temperature": 0,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime};base64,{image_b64}",
+                                "detail": "high",
+                            },
+                        },
+                    ],
+                }
+            ],
+        }
+        headers = {
+            "Authorization": f"Bearer {settings.AIML_API_KEY.get_secret_value()}",
+            "Content-Type": "application/json",
+            "User-Agent": "misaki/0.3 (+hackathon)",
+        }
+        import json as _json
+
+        try:
+            async with httpx.AsyncClient(timeout=timeout_seconds) as client:
+                async with client.stream("POST", url, headers=headers, json=body) as r:
+                    if r.status_code == 429 or 500 <= r.status_code < 600:
+                        text = await r.aread()
+                        raise RetryableError(f"aiml HTTP {r.status_code}: {text[:300]}")
+                    if r.status_code >= 400:
+                        text = await r.aread()
+                        raise NonRetryableError(f"aiml HTTP {r.status_code}: {text[:300]}")
+
+                    async for raw_line in r.aiter_lines():
+                        line = raw_line.strip()
+                        if not line or not line.startswith("data: "):
+                            continue
+                        payload = line[6:]
+                        if payload == "[DONE]":
+                            return
+                        try:
+                            chunk = _json.loads(payload)
+                            # AI/ML streaming sends keep-alive/metadata lines
+                            # with choices: [] before content starts — guard
+                            # against IndexError before accessing choices[0].
+                            choices = chunk.get("choices")
+                            if not choices:
+                                continue
+                            delta = choices[0].get("delta", {})
+                            content = delta.get("content") or ""
+                            if content:
+                                yield content
+                        except (KeyError, IndexError, _json.JSONDecodeError):
+                            continue
+        except (httpx.TimeoutException, httpx.NetworkError) as exc:
+            raise RetryableError(str(exc)) from exc

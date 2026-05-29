@@ -149,7 +149,7 @@ async def triage_node(state: BillAnalysisState) -> dict[str, Any]:
         schema=TriageResult,
         system_prompt=TRIAGE_SYSTEM,
         user_prompt=TRIAGE_USER.format(
-            profile_json=json.dumps(profile, ensure_ascii=False),
+            profile_json=json.dumps(profile, ensure_ascii=False, default=str),
             jurisdiction=bill["jurisdiction"],
             bill_number=bill["bill_number"],
             title=bill["title"],
@@ -181,7 +181,7 @@ async def applicability_node(state: BillAnalysisState) -> dict[str, Any]:
         schema=ApplicabilityVerdict,
         system_prompt=APPLICABILITY_SYSTEM,
         user_prompt=APPLICABILITY_USER.format(
-            profile_json=json.dumps(profile, ensure_ascii=False),
+            profile_json=json.dumps(profile, ensure_ascii=False, default=str),
             precedent_block=precedent_block,
             jurisdiction=bill["jurisdiction"],
             bill_number=bill["bill_number"],
@@ -255,7 +255,7 @@ async def persist_results(state: BillAnalysisState) -> uuid.UUID | None:
                 "tcl": verdict.triggering_clause_location,
                 "cost": verdict.compliance_cost_estimate_usd,
                 "ao": json.dumps([o.model_dump() for o in verdict.affected_operations]),
-                "cb": json.dumps(state.get("precedents", [])),
+                "cb": json.dumps(state.get("precedents", []), default=str),
             },
         )
 
