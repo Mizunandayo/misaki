@@ -13,7 +13,11 @@ interface Props {
 
 
 
-const SUGGESTIONS = ["Stripe", "Anthropic", "OpenAI", "Airbnb"];
+// Publicly-listed companies only — so the live SEC EDGAR 10-K scrape
+// ("proof of source" excerpt) populates on every suggested scan. Private
+// companies (Stripe, OpenAI, Anthropic) have no SEC filings and leave that
+// box empty, which undercuts the "real live data" demo moment.
+const SUGGESTIONS = ["Airbnb", "Coinbase", "Palantir", "Salesforce"];
 
 export function ScannerForm({ onSubmit, pending }: Props) {
   const [value, setValue] = useState("");
