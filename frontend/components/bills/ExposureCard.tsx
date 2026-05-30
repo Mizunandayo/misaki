@@ -1,3 +1,6 @@
+"use client";
+
+import { motion } from 'framer-motion';
 import { VerdictBadge } from './VerdictBadge'
 
 function formatUsd(n: number): string {
@@ -18,7 +21,12 @@ export function ExposureCard({
   probability: { score: number; velocity_7d: number; velocity_direction: string } | null
 }) {
   return (
-    <div className="rounded-xl border border-[var(--color-border-medium)] bg-[var(--color-ink-900)] p-6">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-xl border border-border-medium bg-ink-900 p-6"
+    >
       <VerdictBadge verdict={verdict} />
       <div className="mt-5">
         <div className="text-sm font-semibold uppercase tracking-wider text-[var(--color-paper-200)]">
@@ -29,7 +37,7 @@ export function ExposureCard({
         </div>
       </div>
       {probability && (
-        <div className="mt-6 border-t border-[var(--color-border-soft)] pt-5">
+        <div className="mt-6 border-t border-border-soft pt-5">
           <div className="text-sm font-semibold uppercase tracking-wider text-[var(--color-paper-200)]">
             Pass probability
           </div>
@@ -43,6 +51,6 @@ export function ExposureCard({
           </div>
         </div>
       )}
-    </div>
+    </motion.div>
   )
 }

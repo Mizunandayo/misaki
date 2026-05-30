@@ -16,8 +16,13 @@ export function ConfidenceGauge({ value }: { value: number }) {
 
   
   return (
-    <div className="rounded-xl border border-[var(--color-border-medium)] bg-[var(--color-ink-900)] p-5">
-      <div className="text-sm font-semibold uppercase tracking-wider text-[var(--color-paper-200)] mb-4">
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+      className="rounded-xl border border-border-medium bg-ink-900 p-5"
+    >
+      <div className="mb-4 text-sm font-semibold uppercase tracking-wider text-paper-200">
         Confidence
       </div>
       <div className="flex items-center gap-6">
@@ -37,10 +42,10 @@ export function ConfidenceGauge({ value }: { value: number }) {
           />
         </svg>
         <div>
-          <div className="text-5xl font-bold tabular-nums text-[var(--color-paper-50)]">{value}</div>
-          <div className="mt-1 text-sm text-[var(--color-paper-200)]">out of 100</div>
+          <div className="text-5xl font-bold tabular-nums text-paper-50">{value}</div>
+          <div className="mt-1 text-sm text-paper-200">out of 100</div>
         </div>
       </div>
-    </div>
+    </motion.div>
   )
 }

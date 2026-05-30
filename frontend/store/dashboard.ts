@@ -44,9 +44,23 @@ interface DashboardState {
 
 
 
+// CRITICAL → HIGH → MEDIUM → LOW → NOT_APPLICABLE → unanalyzed
+const VERDICT_RANK: Record<string, number> = {
+  CRITICAL: 0,
+  HIGH: 1,
+  MEDIUM: 2,
+  LOW: 3,
+  NOT_APPLICABLE: 4,
+}
+
 function byUrgencyDesc(bills: Record<string, Bill>): string[] {
   return Object.values(bills)
-    .sort((a, b) => b.urgency_score - a.urgency_score)
+    .sort((a, b) => {
+      const ra = VERDICT_RANK[a.verdict ?? ''] ?? 5
+      const rb = VERDICT_RANK[b.verdict ?? ''] ?? 5
+      if (ra !== rb) return ra - rb
+      return b.urgency_score - a.urgency_score
+    })
     .map((b) => b.id)
 }
 
@@ -115,13 +129,21 @@ export function visibleBills(
   order: string[],
   jurisdiction: JurisdictionFilter,
   severity: SeverityFilter,
+  search = '',
 ): Bill[] {
+  const q = search.trim().toLowerCase()
   return order
     .map((id) => bills[id])
     .filter((b): b is Bill => Boolean(b))
     .filter((b) => jurisdiction === 'ALL' || b.jurisdiction === jurisdiction)
     .filter(
       (b) => severity === 'ALL' || (b.verdict ?? 'NOT_APPLICABLE') === severity,
+    )
+    .filter((b) =>
+      q === '' ||
+      b.title.toLowerCase().includes(q) ||
+      b.bill_number.toLowerCase().includes(q) ||
+      b.jurisdiction.toLowerCase().includes(q),
     )
 }
 

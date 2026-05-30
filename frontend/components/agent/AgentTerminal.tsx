@@ -68,7 +68,9 @@ export function AgentTerminal({ events, status }: Props) {
         <AgentCreditMeter calls={calls} creditCents={creditCents} />
       </header>
 
-      <AgentStepRail events={events} />
+      <div className="min-w-0 overflow-x-auto">
+        <AgentStepRail events={events} />
+      </div>
 
       <motion.div
         layout

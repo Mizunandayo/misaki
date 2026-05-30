@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Compliance Risk Brief — {{ bill.bill_number }}</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  font-family: 'Poppins', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 10.5pt;
+  color: #050505;
+  background: #fff;
+  line-height: 1.65;
+}
+
+/* ─────── PAGE SETUP ─────── */
+@page {
+  size: A4;
+  margin: 0;
+}
+
+@page content {
+  margin: 22mm 24mm 18mm 24mm;
+  @bottom-center {
+    content: "Misaki Legislative Intelligence  ·  Confidential  ·  Page " counter(page) " of " counter(pages);
+    font-family: 'Poppins', sans-serif;
+    font-size: 7.5pt;
+    color: #6b7280;
+  }
+}
+
+/* ─────── COVER PAGE ─────── */
+.cover {
+  page: cover;
+  width: 210mm;
+  min-height: 297mm;
+  background: #050505;
+  color: #fff;
+  padding: 18mm 18mm 16mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.cover-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.misaki-logo {
+  font-size: 16pt;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #fff;
+}
+
+.misaki-logo-kanji {
+  font-size: 12pt;
+  font-weight: 300;
+  color: rgba(255,255,255,0.45);
+  margin-left: 4pt;
+}
+
+.brief-label {
+  font-size: 8pt;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  border: 1px solid rgba(255,255,255,0.18);
+  padding: 5pt 11pt;
+  border-radius: 3pt;
+}
+
+/* ─── Cover body ─── */
+.cover-body {
+  flex: 1;
+  padding: 22mm 0 18mm;
+}
+
+.cover-jurisdiction {
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.45);
+  margin-bottom: 7mm;
+}
+
+.cover-title {
+  font-size: 26pt;
+  font-weight: 800;
+  line-height: 1.18;
+  color: #fff;
+  margin-bottom: 10mm;
+  max-width: 148mm;
+}
+
+.cover-verdict {
+  display: inline-block;
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  padding: 4pt 12pt;
+  border-radius: 3pt;
+  margin-bottom: 18mm;
+}
+
+.verdict-CRITICAL { background: #ef4444; color: #fff; }
+.verdict-HIGH     { background: #f97316; color: #fff; }
+.verdict-MEDIUM   { background: #f59e0b; color: #050505; }
+.verdict-LOW      { background: #14b8a6; color: #fff; }
+
+.exposure-label {
+  font-size: 9pt;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.40);
+  margin-bottom: 3mm;
+}
+
+.exposure-amount {
+  font-size: 68pt;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  letter-spacing: -0.025em;
+}
+
+.exposure-sub {
+  font-size: 10pt;
+  color: rgba(255,255,255,0.40);
+  margin-top: 3mm;
+}
+
+/* ─── Cover footer ─── */
+.cover-footer {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 6mm;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+}
+
+.cover-meta {
+  font-size: 8.5pt;
+  color: rgba(255,255,255,0.35);
+  line-height: 1.9;
+}
+
+.cover-meta strong {
+  color: rgba(255,255,255,0.65);
+  font-weight: 600;
+}
+
+.cover-tagline {
+  font-size: 8pt;
+  color: rgba(255,255,255,0.25);
+  text-align: right;
+  max-width: 50mm;
+  line-height: 1.5;
+}
+
+/* ─────── CONTENT PAGES ─────── */
+.content-page {
+  page: content;
+  page-break-before: always;
+}
+
+.section-number {
+  font-size: 9pt;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(5,5,5,0.38);
+  margin-bottom: 3mm;
+}
+
+h1.section-title {
+  font-size: 21pt;
+  font-weight: 800;
+  color: #050505;
+  margin-bottom: 5mm;
+  padding-bottom: 3mm;
+  border-bottom: 2px solid #050505;
+  line-height: 1.2;
+}
+
+h2.sub-title {
+  font-size: 12pt;
+  font-weight: 700;
+  color: #050505;
+  margin-top: 7mm;
+  margin-bottom: 2.5mm;
+}
+
+p {
+  font-size: 10.5pt;
+  color: #1a1a1a;
+  margin-bottom: 4mm;
+  line-height: 1.7;
+}
+
+ul { padding-left: 6mm; margin-bottom: 4mm; }
+
+li {
+  font-size: 10.5pt;
+  color: #1a1a1a;
+  line-height: 1.7;
+  margin-bottom: 2mm;
+}
+
+/* ─── Exposure banner (on section pages) ─── */
+.exposure-banner {
+  background: #050505;
+  color: #fff;
+  border-radius: 8pt;
+  padding: 7mm 9mm;
+  margin-bottom: 6mm;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.banner-label {
+  font-size: 9pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.50);
+  margin-bottom: 1mm;
+}
+
+.banner-sub {
+  font-size: 9pt;
+  color: rgba(255,255,255,0.35);
+}
+
+.banner-amount {
+  font-size: 32pt;
+  font-weight: 900;
+  color: #fff;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* ─── Before/After posture ─── */
+.posture-grid {
+  display: flex;
+  gap: 4mm;
+  margin: 5mm 0;
+}
+
+.posture-box {
+  flex: 1;
+  border: 1px solid #e5e7eb;
+  border-radius: 6pt;
+  padding: 5mm;
+}
+
+.posture-box-label {
+  font-size: 8pt;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #9ca3af;
+  margin-bottom: 2.5mm;
+}
+
+.posture-box-required {
+  border-color: #050505;
+}
+
+.posture-box-required .posture-box-label {
+  color: #374151;
+}
+
+.posture-box-text {
+  font-size: 10pt;
+  color: #1a1a1a;
+  line-height: 1.65;
+}
+
+/* ─── Triggering clause blockquote ─── */
+.trigger-quote {
+  border-left: 3pt solid #050505;
+  padding-left: 5mm;
+  margin: 4mm 0;
+  font-style: italic;
+  font-size: 10pt;
+  color: #374151;
+  line-height: 1.7;
+}
+
+/* ─── Gap table ─── */
+.gap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 4mm 0;
+  font-size: 9.5pt;
+}
+
+.gap-table th {
+  background: #050505;
+  color: #fff;
+  font-weight: 600;
+  text-align: left;
+  padding: 3.5mm 4.5mm;
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.gap-table td {
+  padding: 4mm 4.5mm;
+  border-bottom: 1px solid #f3f4f6;
+  vertical-align: top;
+  color: #1a1a1a;
+}
+
+.gap-table tr:nth-child(even) td { background: #fafafa; }
+
+.gap-name { font-weight: 600; font-size: 9.5pt; margin-bottom: 1mm; }
+.gap-desc { font-size: 8.5pt; color: #374151; }
+
+.effort-badge {
+  font-size: 7.5pt;
+  font-weight: 700;
+  padding: 2pt 8pt;
+  border-radius: 3pt;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.effort-Low      { background: #dcfce7; color: #166534; }
+.effort-Medium   { background: #fef3c7; color: #92400e; }
+.effort-High     { background: #fee2e2; color: #991b1b; }
+.effort-Critical { background: #ef4444; color: #fff; }
+
+.cost-cell { font-weight: 700; white-space: nowrap; }
+
+.gap-table tfoot td {
+  font-weight: 800;
+  font-size: 10pt;
+  border-top: 2pt solid #050505;
+  border-bottom: none;
+  padding-top: 4mm;
+  color: #050505;
+}
+
+/* ─── Action items ─── */
+.action-item {
+  border: 1px solid #e5e7eb;
+  border-radius: 6pt;
+  padding: 4.5mm;
+  margin-bottom: 3mm;
+  display: flex;
+  gap: 4.5mm;
+  align-items: flex-start;
+}
+
+.action-priority {
+  font-size: 15pt;
+  font-weight: 900;
+  color: #050505;
+  min-width: 9mm;
+  line-height: 1;
+  padding-top: 1mm;
+  text-align: center;
+}
+
+.action-text {
+  font-size: 10.5pt;
+  font-weight: 600;
+  color: #050505;
+  margin-bottom: 1.5mm;
+}
+
+.action-meta {
+  font-size: 8.5pt;
+  color: #374151;
+}
+
+.owner-tag {
+  display: inline-block;
+  font-size: 7.5pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 1.5pt 7pt;
+  border-radius: 3pt;
+  border: 1px solid #d1d5db;
+  color: #374151;
+  margin-right: 4mm;
+}
+
+/* ─── Disclaimer ─── */
+.disclaimer {
+  background: #fafafa;
+  border: 1px solid #e5e7eb;
+  border-radius: 6pt;
+  padding: 5mm;
+  margin-top: 8mm;
+  font-size: 8.5pt;
+  color: #374151;
+  line-height: 1.65;
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════
+     COVER PAGE
+════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-header">
+    <div class="misaki-logo">MISAKI <span class="misaki-logo-kanji">見先</span></div>
+    <div class="brief-label">Compliance Risk Brief</div>
+  </div>
+
+  <div class="cover-body">
+    <div class="cover-jurisdiction">
+      {{ bill.jurisdiction | upper }} &nbsp;·&nbsp; {{ bill.bill_number }} &nbsp;·&nbsp; {{ today }}
+    </div>
+
+    <div class="cover-title">{{ bill.title }}</div>
+
+    {% if assessment.verdict %}
+    <div class="cover-verdict verdict-{{ assessment.verdict }}">
+      {{ assessment.verdict }}
+    </div>
+    {% endif %}
+
+    <div class="exposure-label">Estimated Compliance Exposure</div>
+    <div class="exposure-amount">{{ exposure_formatted }}</div>
+    <div class="exposure-sub">Total engineering + legal cost to achieve full compliance</div>
+  </div>
+
+  <div class="cover-footer">
+    <div class="cover-meta">
+      <div><strong>Prepared by</strong>&nbsp; Misaki Legislative Intelligence Platform</div>
+      <div><strong>AI Engine</strong>&nbsp; AI/ML API Multi-Model Router · LONG_FORM_PROSE capability</div>
+      <div><strong>Company</strong>&nbsp; NovaTech Inc. · Austin, TX</div>
+      <div><strong>Date</strong>&nbsp; {{ today }}</div>
+      <div><strong>Confidentiality</strong>&nbsp; Privileged &amp; Confidential</div>
+    </div>
+    <div class="cover-tagline">
+      Generated in under 15 seconds by Misaki's compliance intelligence engine.
+      Verify all estimates with qualified legal counsel before presenting to leadership.
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 2 — EXECUTIVE SUMMARY
+════════════════════════════════════════════════ -->
+<div class="content-page">
+  <div class="section-number">Section 01</div>
+  <h1 class="section-title">Executive Summary</h1>
+
+  <div class="exposure-banner">
+    <div>
+      <div class="banner-label">Total Compliance Exposure</div>
+      <div class="banner-sub">{{ content.total_gaps }} compliance gap{{ "s" if content.total_gaps != 1 else "" }} identified across {{ content.compliance_gaps | length }} operational areas</div>
+    </div>
+    <div class="banner-amount">{{ exposure_formatted }}</div>
+  </div>
+
+  <p>{{ content.executive_summary }}</p>
+
+  <h2 class="sub-title">Key Compliance Obligations</h2>
+  <ul>
+    {% for item in content.key_obligations %}
+    <li>{{ item }}</li>
+    {% endfor %}
+  </ul>
+
+  <h2 class="sub-title">Legislative Status</h2>
+  <p>{{ content.pass_probability_note }}</p>
+
+  {% if content.compliance_window_days %}
+  <p><strong>Compliance window:</strong> {{ content.compliance_window_days }} days from bill passage to deadline.</p>
+  {% endif %}
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 3 — COMPLIANCE POSTURE ANALYSIS
+════════════════════════════════════════════════ -->
+<div class="content-page">
+  <div class="section-number">Section 02</div>
+  <h1 class="section-title">Compliance Posture Analysis</h1>
+
+  <div class="posture-grid">
+    <div class="posture-box">
+      <div class="posture-box-label">Current State</div>
+      <div class="posture-box-text">{{ content.current_posture_before }}</div>
+    </div>
+    <div class="posture-box posture-box-required">
+      <div class="posture-box-label">Required State</div>
+      <div class="posture-box-text">{{ content.required_posture_after }}</div>
+    </div>
+  </div>
+
+  {% if assessment.triggering_clause_text %}
+  <h2 class="sub-title">Triggering Clause</h2>
+  <div class="trigger-quote">
+    &ldquo;{{ assessment.triggering_clause_text }}&rdquo;
+  </div>
+  {% endif %}
+
+  <h2 class="sub-title">Escalation Recommendation</h2>
+  <p>{{ content.recommended_escalation }}</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 4 — COMPLIANCE GAP ANALYSIS
+════════════════════════════════════════════════ -->
+<div class="content-page">
+  <div class="section-number">Section 03</div>
+  <h1 class="section-title">Compliance Gap Analysis</h1>
+
+  <table class="gap-table">
+    <thead>
+      <tr>
+        <th style="width: 38%">Gap &amp; Description</th>
+        <th style="width: 14%">Effort</th>
+        <th style="width: 10%">Weeks</th>
+        <th style="width: 14%">Cost</th>
+        <th style="width: 12%">Owner</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for gap in content.compliance_gaps %}
+      <tr>
+        <td>
+          <div class="gap-name">{{ gap.title }}</div>
+          <div class="gap-desc">{{ gap.description }}</div>
+        </td>
+        <td><span class="effort-badge effort-{{ gap.engineering_effort }}">{{ gap.engineering_effort }}</span></td>
+        <td>{{ gap.estimated_weeks }}w</td>
+        <td class="cost-cell">${{ "{:,.0f}".format(gap.estimated_cost_usd) }}</td>
+        <td><span class="owner-tag">{{ gap.owner }}</span></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="3"><strong>Total Compliance Exposure</strong></td>
+        <td class="cost-cell" colspan="2">{{ exposure_formatted }}</td>
+      </tr>
+    </tfoot>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════
+     PAGE 5 — ACTION PLAN
+════════════════════════════════════════════════ -->
+<div class="content-page">
+  <div class="section-number">Section 04</div>
+  <h1 class="section-title">Action Plan</h1>
+
+  {% for item in content.action_items %}
+  <div class="action-item">
+    <div class="action-priority">{{ item.priority }}</div>
+    <div style="flex: 1">
+      <div class="action-text">{{ item.action }}</div>
+      <div class="action-meta">
+        <span class="owner-tag">{{ item.owner }}</span>
+        <span>Deadline: {{ item.deadline_days }} days</span>
+        {% if item.cost_usd %}
+        <span style="margin-left: 5mm">Est. cost: ${{ "{:,.0f}".format(item.cost_usd) }}</span>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+  <div class="disclaimer">
+    <strong>Disclaimer:</strong> This compliance risk brief was generated by Misaki's AI intelligence
+    engine using publicly available legislative data and the NovaTech company intelligence profile.
+    It does not constitute legal advice and must not be relied upon as a substitute for advice from
+    qualified legal counsel. All cost and timeline estimates are preliminary indicators only.
+    Generated {{ today }} — Recommended review period: 30 days.
+  </div>
+</div>
+
+</body>
+</html>

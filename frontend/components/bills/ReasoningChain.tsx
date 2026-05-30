@@ -29,88 +29,127 @@ export function ReasoningChain({ steps, live, attribution }: ReasoningChainProps
   if (steps.length === 0 && !live) return null
 
   return (
-    <div className="rounded-2xl border border-[var(--color-border-soft)] bg-[var(--color-ink-900)]/60 p-8">
-      <header className="mb-6 flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <div className="text-[14px] font-semibold uppercase tracking-widest text-white/70">
-            {attribution ? 'AI/ML API reasoning chain' : 'Reasoning chain'}
+    <motion.div
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+      className="overflow-hidden"
+    >
+      {/* Header */}
+      <div className="border-b border-[var(--color-border-soft)] px-6 py-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="mb-1.5 flex items-center gap-2.5">
+              {/* Brain/thinking icon */}
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span className="text-sm font-semibold uppercase tracking-widest text-[var(--color-paper-200)]">
+                {attribution ? 'AI/ML API Reasoning Chain' : 'Reasoning Chain'}
+              </span>
+            </div>
+            <h2 className="text-xl font-bold text-white">How Misaki reached this verdict</h2>
+            {attribution && (
+              <motion.div
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                className="mt-3 flex flex-wrap items-center gap-3"
+              >
+                <ModelRouterBadge provider={attribution.provider} model={attribution.model} />
+                <span className="text-base font-medium text-[var(--color-paper-200)]">
+                  {prettifyCapability(attribution.capability)}
+                </span>
+                <span className="flex items-center gap-1.5 text-base font-medium text-[var(--color-paper-200)]">
+                  <Clock size={14} strokeWidth={1.75} />
+                  {fmtMs(attribution.latency_ms)}
+                </span>
+              </motion.div>
+            )}
           </div>
-          <h2 className="mt-1 text-2xl font-bold tracking-tight text-white">
-            How Misaki reached this verdict
-          </h2>
-          {attribution && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-2 flex flex-wrap items-center gap-3"
-            >
-              <ModelRouterBadge provider={attribution.provider} model={attribution.model} />
-              <span className="text-[14px] font-medium text-white/60">
-                {prettifyCapability(attribution.capability)} capability
+
+          {/* Live indicator */}
+          {live && (
+            <div className="inline-flex shrink-0 items-center gap-2 rounded-lg border border-[var(--color-border-soft)] bg-[var(--color-ink-800)] px-3 py-1.5">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
               </span>
-              <span className="flex items-center gap-1.5 text-[14px] font-medium text-white/60">
-                <Clock size={13} strokeWidth={1.75} />
-                {fmtMs(attribution.latency_ms)}
-              </span>
-            </motion.div>
+              <span className="text-base font-medium text-white">Live</span>
+            </div>
           )}
         </div>
-        {live && (
-          <span className="inline-flex items-center gap-2 text-base font-medium text-white/80">
-            <span className="relative flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-            </span>
-            Live
-          </span>
-        )}
-      </header>
+      </div>
 
-      <ol className="flex flex-col gap-6">
+      {/* Step list — timeline layout */}
+      <ol className="relative flex flex-col px-6 pb-4 pt-2">
+        {/* Vertical connector line */}
+        <div className="pointer-events-none absolute bottom-4 left-[43px] top-2 w-px bg-gradient-to-b from-[#60a5fa]/30 via-[#60a5fa]/15 to-transparent" />
+
         <AnimatePresence initial={false}>
-          {steps.map((s) => (
+          {steps.map((s, idx) => (
             <motion.li
               key={s.step}
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-[48px_1fr] gap-4"
+              className="relative flex gap-5 py-4"
             >
-              {/* Step number + model badge stacked */}
-              <div className="flex flex-col items-center gap-2 pt-0.5">
-                <span className="text-2xl font-bold tabular-nums leading-none text-white/50">
-                  {s.step.toString().padStart(2, '0')}
-                </span>
-                {attribution && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: 0.5, delay: 0.15 }}
-                  >
-                    <ModelRouterBadge
-                      provider={attribution.provider}
-                      model={attribution.model}
-                      className="text-[11px] px-1.5 py-0.5"
-                    />
-                  </motion.div>
+              {/* Step circle */}
+              <div className="relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#60a5fa]/25 bg-[#60a5fa]/[0.07]">
+                {idx < steps.length - 1 || !live ? (
+                  <span className="text-sm font-bold tabular-nums text-[#60a5fa]">
+                    {String(s.step).padStart(2, "0")}
+                  </span>
+                ) : (
+                  /* Pulsing dot on the last/active step while live */
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#60a5fa] opacity-75" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#60a5fa]" />
+                  </span>
                 )}
               </div>
 
-              {/* Step content */}
-              <div>
-                <div className="text-base font-semibold leading-relaxed text-white">
+              {/* Content */}
+              <div className="min-w-0 flex-1 pt-1">
+                <p className="text-base font-semibold leading-relaxed text-white">
                   {s.observation}
-                </div>
-                <div className="mt-2 flex items-start gap-2 text-base font-medium leading-relaxed text-white/80">
-                  <span className="mt-1 shrink-0 text-white/40" aria-hidden>→</span>
-                  <span>{s.inference}</span>
+                </p>
+                <div className="mt-2.5 flex items-start gap-2">
+                  <svg
+                    className="mt-1 shrink-0 text-[#60a5fa]"
+                    width="13" height="13" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                  <p className="text-[15px] leading-relaxed text-white/65">
+                    {s.inference}
+                  </p>
                 </div>
               </div>
             </motion.li>
           ))}
         </AnimatePresence>
+
+        {/* Skeleton while streaming with no steps yet */}
+        {live && steps.length === 0 && (
+          <li className="relative flex gap-5 py-4">
+            <div className="relative z-10 mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#60a5fa]/15 bg-[#60a5fa]/[0.04]">
+              <span className="relative flex h-2 w-2">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#60a5fa] opacity-60" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-[#60a5fa]" />
+              </span>
+            </div>
+            <div className="flex-1 space-y-3 pt-1">
+              <div className="h-5 w-3/4 animate-pulse rounded-md bg-white/[0.06]" />
+              <div className="h-4 w-1/2 animate-pulse rounded-md bg-white/[0.04]" />
+            </div>
+          </li>
+        )}
       </ol>
-    </div>
+    </motion.div>
   )
 }

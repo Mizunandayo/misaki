@@ -12,7 +12,7 @@ import uuid
 from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel
-from sqlalchemy import desc, select, text
+from sqlalchemy import select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.db.session import get_db
 from app.models import Bill
@@ -30,6 +30,8 @@ class BillListItem(BaseModel):
     status: str
     pass_probability: int
     urgency_score: int
+    verdict: str | None = None
+    compliance_cost_estimate: int | None = None
 
 
 class BillListResponse(BaseModel):
@@ -62,26 +64,47 @@ async def list_bills(
     offset: int = Query(0, ge=0),
     jurisdiction: str | None = Query(None, max_length=8),
 ) -> BillListResponse:
-    base = select(Bill).order_by(desc(Bill.urgency_score), desc(Bill.created_at))
-    if jurisdiction:
-        base = base.where(Bill.jurisdiction == jurisdiction)
+    where_sql = "WHERE b.jurisdiction = :jurisdiction" if jurisdiction else ""
 
-    rows = (await db.execute(base.limit(limit).offset(offset))).scalars().all()
-    total_query = select(text("COUNT(*)")).select_from(Bill)
+    rows_query = text(f"""
+        SELECT
+            b.id, b.jurisdiction, b.bill_number, b.title, b.status,
+            b.pass_probability, b.urgency_score,
+            a.verdict, a.compliance_cost_estimate
+        FROM bills b
+        LEFT JOIN LATERAL (
+            SELECT verdict, compliance_cost_estimate
+            FROM assessments
+            WHERE bill_id = b.id
+            ORDER BY created_at DESC
+            LIMIT 1
+        ) a ON true
+        {where_sql}
+        ORDER BY b.urgency_score DESC, b.created_at DESC
+        LIMIT :limit OFFSET :offset
+    """)
+
+    count_query = text(f"SELECT COUNT(*) FROM bills b {where_sql}")
+
+    params: dict[str, Any] = {"limit": limit, "offset": offset}
     if jurisdiction:
-        total_query = total_query.where(Bill.jurisdiction == jurisdiction)
-    total = (await db.execute(total_query)).scalar_one()
+        params["jurisdiction"] = jurisdiction
+
+    rows = (await db.execute(rows_query, params)).mappings().all()
+    total = (await db.execute(count_query, params)).scalar_one()
 
     return BillListResponse(
         items=[
             BillListItem(
-                id=r.id,
-                jurisdiction=r.jurisdiction,
-                bill_number=r.bill_number,
-                title=r.title,
-                status=r.status,
-                pass_probability=r.pass_probability,
-                urgency_score=r.urgency_score,
+                id=r["id"],
+                jurisdiction=r["jurisdiction"],
+                bill_number=r["bill_number"],
+                title=r["title"],
+                status=r["status"],
+                pass_probability=r["pass_probability"],
+                urgency_score=r["urgency_score"],
+                verdict=r["verdict"],
+                compliance_cost_estimate=r["compliance_cost_estimate"],
             )
             for r in rows
         ],

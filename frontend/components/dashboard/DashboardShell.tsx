@@ -1,30 +1,35 @@
 'use client'
 
-import { useEffect, useRef } from 'react'
 import { useDashboard } from '@/store/dashboard'
 import { useBillRealtime } from '@/hooks/useBillRealtime'
 import { Sidebar } from './Sidebar'
-import { ThreatFeed } from './ThreatFeed'
 import { ActivityPanelRight } from './ActivityPanelRight'
 import { EmberPulseOverlay } from './EmberPulseOverlay'
 import type { Bill } from '@/lib/api'
 
-export function DashboardShell({ initialBills }: { initialBills: Bill[] }) {
+interface DashboardShellProps {
+  initialBills: Bill[]
+  children: React.ReactNode
+}
 
-  const billsRef = useRef(initialBills)
+export function DashboardShell({ initialBills, children }: DashboardShellProps) {
 
-  useEffect(() => {
-    useDashboard.getState().seed(billsRef.current)
-  }, [])
+  // Seed synchronously during render so child client pages read store data on
+  // their very first render — no useEffect delay, no empty-then-populated flash.
+  if (useDashboard.getState().order.length === 0 && initialBills.length > 0) {
+    useDashboard.getState().seed(initialBills)
+  }
 
   useBillRealtime()
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-ink-950)]">
+    <div className="relative h-screen overflow-hidden bg-[var(--color-ink-950)]">
       <EmberPulseOverlay />
-      <div className="grid min-h-screen grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]">
+      <div className="grid h-screen grid-cols-1 md:grid-cols-[240px_minmax(0,1fr)] xl:grid-cols-[260px_minmax(0,1fr)_360px]">
         <Sidebar />
-        <ThreatFeed />
+        <main className="min-h-0 overflow-y-auto">
+          {children}
+        </main>
         <ActivityPanelRight />
       </div>
     </div>

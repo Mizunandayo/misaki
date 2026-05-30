@@ -30,6 +30,8 @@ from app.middleware.security_headers import SecurityHeadersMiddleware
 from app.api.v1 import agentic, scanner, share
 from app.api.v1 import agentic, scanner, share, intelligence
 from app.api.v1 import agentic, scanner, share, intelligence, ingest_vision
+from app.api.v1 import agentic, scanner, share, intelligence, ingest_vision, briefs
+from app.api.v1 import self_assessment
 
 
 
@@ -131,6 +133,8 @@ app.include_router(scanner.router, prefix="/api/v1")
 app.include_router(share.router,   prefix="/api/v1")
 app.include_router(intelligence.router, prefix="/api/v1")
 app.include_router(ingest_vision.router, prefix="/api/v1")
+app.include_router(briefs.router, prefix="/api/v1")
+app.include_router(self_assessment.router, prefix="/api/v1")
 
 
 

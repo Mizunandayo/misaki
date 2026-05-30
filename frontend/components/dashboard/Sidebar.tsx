@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard,
-  ScrollText,
   Building2,
   Cpu,
   type LucideIcon,
@@ -22,7 +21,6 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { label: 'Threat Feed', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'All Bills', href: '/bills', icon: ScrollText },
   { label: 'Company Profile', href: '/profile', icon: Building2 },
   { label: 'Model Router', href: '/dashboard/model-router', icon: Cpu },
 ]
@@ -53,8 +51,8 @@ export function Sidebar() {
               href={item.href}
               aria-current={active ? 'page' : undefined}
               className={cn(
-                'group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5',
-                'text-base font-medium transition-all duration-200',
+                'group flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2.5 min-w-0',
+                'text-[15px] font-medium transition-all duration-200 whitespace-nowrap',
                 active
                   ? 'bg-white/[0.06] text-white'
                   : 'text-white/65 hover:bg-white/[0.04] hover:text-white',
@@ -65,7 +63,7 @@ export function Sidebar() {
                 strokeWidth={1.75}
                 className="shrink-0 transition-transform duration-200 group-hover:scale-110"
               />
-              <span>{item.label}</span>
+              <span className="truncate">{item.label}</span>
               {active && <span className="ml-auto h-1.5 w-1.5 rounded-full bg-white" aria-hidden />}
             </Link>
           )

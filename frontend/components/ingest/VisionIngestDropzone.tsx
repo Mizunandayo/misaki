@@ -14,12 +14,6 @@ const MAX_MB = 10
 
 
 
-
-
-
-
-
-
 function ScanningOverlay() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-xl">
@@ -34,13 +28,6 @@ function ScanningOverlay() {
     </div>
   )
 }
-
-
-
-
-
-
-
 
 
 
@@ -91,20 +78,6 @@ export function VisionIngestDropzone({ onClose }: { onClose?: () => void }) {
   const done = status === 'complete'
   const failed = status === 'error'
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
   return (
     <div className="flex flex-col gap-6 font-[Poppins]">
       {/* Header */}

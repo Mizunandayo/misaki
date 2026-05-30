@@ -37,7 +37,7 @@ export function AgentStepRail({ events }: { events: AgentEvent[] }) {
 
 
   return (
-    <ol className="flex gap-2 font-[Poppins]">
+    <ol className="flex flex-wrap gap-x-3 gap-y-2 font-[Poppins]">
       {STEPS.map((s, i) => {
         const done = completed.has(s.id);
         const live = active === s.id;

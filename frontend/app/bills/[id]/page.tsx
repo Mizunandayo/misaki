@@ -22,7 +22,7 @@ export default async function BillPage({
     notFound();
   }
 
-const autoAgent = agent === "1";
+  const autoAgent = agent === "1";
 
   return <BillDetailView bill={bill} autoAgent={autoAgent} />;
 }

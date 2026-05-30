@@ -69,8 +69,16 @@ async def stream_events(
             if await request.is_disconnected():
                 return
             yield _sse(evt)
-            if evt.get("type") in {"CONCLUDE", "ERROR"}:
-                # Give the queue one tick to flush trailing events, then close.
+            # Only close on the terminal signals — ERROR, or the final
+            # graph_complete CONCLUDE. Intermediate node CONCLUDEs (e.g.
+            # law_firm_discovery) must NOT close the stream or steps 2-4
+            # will never reach the browser.
+            payload = evt.get("payload", {})
+            is_terminal = evt.get("type") == "ERROR" or (
+                evt.get("type") == "CONCLUDE"
+                and payload.get("kind") == "graph_complete"
+            )
+            if is_terminal:
                 await asyncio.sleep(0.05)
                 return
 
