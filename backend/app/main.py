@@ -1,5 +1,7 @@
 """FastAPI application entrypoint."""
 from __future__ import annotations
+import asyncio
+import contextlib
 import os
 from contextlib import asynccontextmanager
 from collections.abc import AsyncIterator
@@ -82,11 +84,19 @@ limiter = Limiter(
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     log.info("misaki_starting", env=settings.ENVIRONMENT)
-    await bus.start()
+    # The event bus opens a Postgres LISTEN connection for SSE streaming.
+    # It must NEVER block or crash startup: if it can't connect (network,
+    # pooler, SSL, IPv6), the API still serves all REST endpoints and the
+    # healthcheck passes. SSE features degrade until the bus recovers.
+    try:
+        await asyncio.wait_for(bus.start(), timeout=10)
+    except Exception as exc:  # noqa: BLE001 — startup must be resilient
+        log.error("mcp_bus_start_failed", error=str(exc)[:300])
     try:
         yield
     finally:
-        await bus.stop()
+        with contextlib.suppress(Exception):
+            await bus.stop()
         log.info("misaki_shutting_down")
 
 
