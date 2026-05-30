@@ -44,8 +44,10 @@ async def _eligible(spec: ModelSpec) -> bool:
     if await cb.is_provider_tripped(spec.provider):
         return False
     if spec.provider == "aiml":
-        budget = await cb.aiml_budget_remaining_usd()
-        if budget <= 0:
+        if await cb.aiml_budget_remaining_usd() <= 0:
+            return False
+    if spec.provider == "gemini":
+        if await cb.gemini_budget_remaining_usd() <= 0:
             return False
     return True
 
@@ -144,6 +146,8 @@ async def reason(
             cost = _estimate_cost_usd(spec, pr)
             if spec.provider == "aiml":
                 await cb.record_aiml_spend_usd(cost)
+            elif spec.provider == "gemini":
+                await cb.record_gemini_spend_usd(cost)
 
             try:
                 validated = schema.model_validate(pr.raw_json)
@@ -220,8 +224,11 @@ async def reason_vision_stream(
     for spec in candidates:
         # Vision bypass: only hard-skip when budget is zero. Ignore CB trips.
         if spec.provider == "aiml":
-            budget = await cb.aiml_budget_remaining_usd()
-            if budget <= 0:
+            if await cb.aiml_budget_remaining_usd() <= 0:
+                log.info("gateway_vision_skip_budget", provider=spec.provider)
+                continue
+        if spec.provider == "gemini":
+            if await cb.gemini_budget_remaining_usd() <= 0:
                 log.info("gateway_vision_skip_budget", provider=spec.provider)
                 continue
 
@@ -295,6 +302,8 @@ async def reason_vision_stream(
         est_cost = (total_tokens / 1000.0) * spec.output_usd_per_1k
         if spec.provider == "aiml":
             await cb.record_aiml_spend_usd(est_cost)
+        elif spec.provider == "gemini":
+            await cb.record_gemini_spend_usd(est_cost)
         await record_call(
             run_id=run_id, task=task, capability=capability.value,
             provider=spec.provider, model=spec.model,

@@ -13,6 +13,8 @@ import uuid
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, HTTPException, Request, status
 from pydantic import BaseModel, Field
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 from sqlalchemy import text
 from app.ai.guards import sanitize_company_name
 from app.core.signing import mint as mint_token, DEFAULT_TTL_SECONDS
@@ -21,6 +23,7 @@ from app.graphs.scanner import run_scanner
 from app.services.agent_run import create_run
 
 router = APIRouter(prefix="/scanner", tags=["scanner"])
+limiter = Limiter(key_func=get_remote_address)
 
 
 
@@ -45,7 +48,9 @@ def _normalize(name: str) -> str:
 
 
 @router.post("", response_model=ScannerRunResponse, status_code=status.HTTP_202_ACCEPTED)
-async def start_scan(payload: ScannerRunRequest, request: Request):
+@limiter.limit("5/minute")
+@limiter.limit("40/day")
+async def start_scan(request: Request, payload: ScannerRunRequest):
     clean = sanitize_company_name(payload.name)
     if clean is None:
         raise HTTPException(

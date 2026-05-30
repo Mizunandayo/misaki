@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     AIML_API_KEY: SecretStr = SecretStr("")
     AIML_BASE_URL: AnyHttpUrl = "https://api.aimlapi.com/v1"  # type: ignore
     AIML_DAILY_USD_CAP: float = 8.0
+    # Drainage protection for the owner-funded keys. Gemini is the paid key
+    # (~$10 total) and is the default route, so it gets a hard daily USD cap.
+    # Bright Data runs on a hackathon coupon — capped by live (non-cached) MCP
+    # call count per day. Both reset at UTC midnight. Override via env.
+    GEMINI_DAILY_USD_CAP: float = 5.0
+    BRIGHT_DATA_DAILY_CALL_CAP: int = 800
     LLM_PROVIDER: Literal["aiml", "gemini"] = "gemini"
     MCP_EVENT_CHANNEL: str = "misaki_mcp_events"
     MISAKI_SIGNING_KEY: SecretStr

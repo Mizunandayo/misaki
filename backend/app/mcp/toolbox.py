@@ -27,6 +27,7 @@ import redis.asyncio as aioredis
 from langfuse import observe
 from sqlalchemy import text
 
+from app.ai import circuit_breaker as cb
 from app.ai.cache import _client
 from app.core.logging import get_logger
 from app.db.session import session_scope
@@ -121,6 +122,21 @@ async def call_tool(
         )
         await _bump_run_meter(run_id, cached=True)
         return result
+
+    # Daily live-call cap — protects the Bright Data coupon budget from being
+    # drained by abuse of the public scanner/agent endpoints. Cached hits above
+    # never reach here, so legitimate repeat traffic is unaffected.
+    if await cb.brightdata_calls_remaining() <= 0:
+        await publish_event(
+            run_id,
+            EventType.ERROR,
+            {"tool": tool_name, "error": "brightdata_daily_cap_reached"},
+        )
+        raise RuntimeError(
+            "Bright Data daily call cap reached — live web scraping is paused "
+            "until reset to protect the shared budget."
+        )
+    await cb.record_brightdata_call()
 
     await publish_event(
         run_id,
