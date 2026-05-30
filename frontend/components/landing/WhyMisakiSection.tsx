@@ -27,7 +27,7 @@ function Part() {
   );
 }
 
-const ROWS: Array<{ feat: string; misaki: true | string; quorum: boolean | "~"; fiscal: boolean | "~"; lexis: boolean | "~" }> = [
+const ROWS: Array<{ feat: string; misaki: true | string; quorum: boolean | "~" | string; fiscal: boolean | "~" | string; lexis: boolean | "~" | string }> = [
   { feat: "Real-time bill monitoring",        misaki: true, quorum: "~",   fiscal: true,  lexis: false },
   { feat: "Company-specific reasoning",       misaki: true, quorum: false, fiscal: "~",   lexis: false },
   { feat: "Dollar exposure estimate",         misaki: true, quorum: false, fiscal: false, lexis: false },
