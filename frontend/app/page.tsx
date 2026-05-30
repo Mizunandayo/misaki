@@ -51,7 +51,7 @@ export default function LandingPage() {
         <MarketSection />
         <RevenueSection />
         <RoadmapSection />
-
+        
         {/* 14 · Final CTA */}
         <CTASection />
       </main>

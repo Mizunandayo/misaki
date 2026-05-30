@@ -148,37 +148,59 @@ export function Hero() {
           textAlign: "center",
         }}
       >
-        {/* Hackathon badge */}
+        {/* Hackathon dateline — editorial transmission slug, no pill */}
         <div
           className="hero-enter"
           style={{
             animationDelay: "0.05s",
             display: "inline-flex",
+            flexDirection: "column",
             alignItems: "center",
-            gap: 8,
-            border: "1px solid rgba(163,163,163,0.25)",
-            borderRadius: 999,
-            padding: "9px 18px",
-            marginBottom: 36,
-            background: "rgba(38,38,38,0.52)",
-            backdropFilter: "blur(12px)",
-            fontSize: "0.86rem",
-            fontWeight: 600,
-            color: "rgba(228,228,231,0.88)",
-            letterSpacing: "0.02em",
+            gap: 10,
+            marginBottom: 40,
           }}
         >
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 12,
+              fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+              fontSize: "0.72rem",
+              letterSpacing: "0.18em",
+              textTransform: "uppercase",
+              whiteSpace: "nowrap",
+            }}
+          >
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, color: "#4ade80" }}>
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  background: "#22c55e",
+                  boxShadow: "0 0 9px rgba(34,197,94,0.85)",
+                  animation: "pulseDot 2.2s ease-in-out infinite",
+                }}
+              />
+              Live
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.22)", letterSpacing: 0 }}>/</span>
+            <span style={{ color: "rgba(245,245,245,0.95)", fontWeight: 600 }}>
+              Web&nbsp;Data&nbsp;Unlocked
+            </span>
+            <span style={{ color: "rgba(255,255,255,0.22)", letterSpacing: 0 }}>/</span>
+            <span style={{ color: "rgba(212,212,216,0.5)", fontWeight: 500 }}>
+              May&nbsp;25–31&nbsp;2026
+            </span>
+          </div>
           <span
             style={{
-              width: 7,
-              height: 7,
-              borderRadius: "50%",
-              background: "#22c55e",
-              flexShrink: 0,
-              animation: "pulseDot 2.2s ease-in-out infinite",
+              width: "100%",
+              height: 1,
+              background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.24) 50%, transparent 100%)",
             }}
           />
-          Web Data UNLOCKED Hackathon &nbsp;·&nbsp; May 25–31, 2026
         </div>
 
         {/* Wordmark */}
