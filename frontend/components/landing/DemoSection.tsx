@@ -2,8 +2,8 @@
 
 import { Reveal } from "./Reveal";
 
-// Replace MISAKI_DEMO_VIDEO_ID with your YouTube video ID once uploaded
-const YOUTUBE_VIDEO_ID = "MISAKI_DEMO_VIDEO_ID";
+// YouTube video ID for the Misaki demo (https://youtu.be/rVXMIxTKRq0)
+const YOUTUBE_VIDEO_ID = "rVXMIxTKRq0";
 
 const MOMENTS = [
   {
